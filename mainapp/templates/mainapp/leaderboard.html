@@ -1,0 +1,111 @@
+{% extends 'mainapp/index.html' %}
+{% load static %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1 style="text-align: center; margin-bottom: 20px; color: #333;">Leaderboard</h1>
+    <table class="leaderboard-table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Total Profit</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboard-table">
+            {% for user in leaderboard_data %}
+            <tr>
+                <td>{{ forloop.counter }}</td> <!-- Rank -->
+                <td>{{ user.username }}</td> <!-- Username -->
+                <td class="{% if user.total_profit > 0 %}profit-positive{% elif user.total_profit < 0 %}profit-negative{% else %}profit-zero{% endif %}">
+                    {{ user.total_profit|floatformat:2 }}
+                </td> <!-- Total Profit -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    /* Container styling */
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Table styling */
+    .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .leaderboard-table th {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+    }
+
+    .leaderboard-table tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    /* Rank column styling */
+    .leaderboard-table td:first-child {
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* Profit/Loss styling */
+    .profit-positive {
+        color: green;
+        font-weight: bold;
+    }
+
+    .profit-negative {
+        color: red;
+        font-weight: bold;
+    }
+
+    .profit-zero {
+        color: #333;
+        font-weight: bold;
+    }
+</style>
+
+<script>
+    // Function to refresh the leaderboard every 1 seconds
+    function refreshLeaderboard() {
+        fetch('/leaderboard/')
+            .then(response => response.text())
+            .then(html => {
+                // Replace the leaderboard table with the updated content
+                const parser = new DOMParser();
+                const newDocument = parser.parseFromString(html, 'text/html');
+                const newTableBody = newDocument.getElementById('leaderboard-table').innerHTML;
+                document.getElementById('leaderboard-table').innerHTML = newTableBody;
+            })
+            .catch(error => console.error('Error refreshing leaderboard:', error));
+    }
+
+    // Refresh the leaderboard every 1 seconds
+    setInterval(refreshLeaderboard, 1000);
+</script>
+{% endblock %}

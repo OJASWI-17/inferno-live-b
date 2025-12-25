@@ -1,0 +1,50 @@
+{% extends 'mainapp/index.html' %}
+{% block title %}Login{% endblock %}
+{% block body %}
+
+{{request.user}}
+{% comment %} {{request.user.first_name}} {% endcomment %}
+
+    <div class="container" style="margin-top: 50px;">
+        
+            <form method="POST" enctype="multipart/form-data" >
+              {% csrf_token %}
+              <h2> LOGIN PAGE</h2>
+
+              <div class="alert alert-primary" role="alert">
+                {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+              </div>
+              
+                <div class="mb-3">
+                  <label for="exampleInputEmail1" class="form-label">User name</label>
+                  <input type="text" name ="username" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                  <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                </div>
+                <div class="mb-3">
+                  <label for="exampleInputEmail1" class="form-label">E-mail</label>
+                  <input type="text" name ="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                  <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                </div>
+                <div class="mb-3">
+                  <label for="exampleInputPassword1" class="form-label">Password</label>
+                  <input name="password" type="password" class="form-control" id="exampleInputPassword1">
+                </div>
+                <div class="mb-3 form-check">
+                  <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                  <label class="form-check-label" for="exampleCheck1">Check me out</label>
+                </div>
+                <p>Dont have account? <a href="/register/">register</a></p>
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </form>
+                
+                
+              
+    </div>
+
+{% endblock %}

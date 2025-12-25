@@ -1,0 +1,92 @@
+{% extends 'mainapp/index.html' %}
+{% load static %}
+{% block title %} StockTracker {% endblock %}
+
+{% block css %}
+<style>
+  .red { color: red; }
+  .green { color: green; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <a href="{% url 'chart' %}" class="btn btn-primary" target="_blank">buy/sell</a>
+
+  <h1>Live Stock Tracker</h1>
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>SNo.</th>
+          <th>Stock</th>
+          <th>Price</th>
+          <th>Open</th>
+          <th>High</th>
+          <th>Low</th>
+          <th>Volume</th>
+        </tr>
+      </thead>
+      <tbody id="stock-data">
+        {% for ticker, details in data.items %}
+        <tr id="row-{{ ticker }}">
+          <td>{{ forloop.counter }}</td>
+          <td>{{ ticker }}</td>
+          <td id="{{ ticker }}_price">{{ details.close }}</td>
+          <td id="{{ ticker }}_open">{{ details.open }}</td>
+          <td id="{{ ticker }}_high">{{ details.high }}</td>
+          <td id="{{ ticker }}_low">{{ details.low }}</td>
+          <td id="{{ ticker }}_vol">{{ details.volume }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+{{ room_name|json_script:"room-name" }} 
+<script>
+  const roomName = JSON.parse(document.getElementById('room-name').textContent);
+  const queryString = window.location.search.substring(1);
+  console.log("Query String:", queryString);
+
+  // Build WebSocket URL
+  const wsUrl = 
+    'ws://' +
+    window.location.host +
+    '/ws/stock/' +
+    roomName +
+    '/?' +
+    queryString;
+
+  console.log("WebSocket URL:", wsUrl);
+
+  // Initialize WebSocket connection
+  const stockSocket = new WebSocket(wsUrl);
+
+  stockSocket.onmessage = function(event) {
+    const data = JSON.parse(event.data); // Parse JSON data bcoz it is in string format and we need to convert it into json
+    console.log("Received Data:", data);
+
+    for (const [ticker, values] of Object.entries(data)) {
+      document.getElementById(`${ticker}_price`).innerText = values.close;
+      document.getElementById(`${ticker}_open`).innerText = values.open;
+      document.getElementById(`${ticker}_high`).innerText = values.high;
+      document.getElementById(`${ticker}_low`).innerText = values.low;
+      document.getElementById(`${ticker}_vol`).innerText = values.volume;
+    }
+  };
+
+  stockSocket.onopen = function(event) {
+    console.log("WebSocket connection opened:", event);
+  };
+
+  stockSocket.onerror = function(error) {
+    console.error("WebSocket Error:", error);
+  };
+</script>
+{% endblock %}
+
+

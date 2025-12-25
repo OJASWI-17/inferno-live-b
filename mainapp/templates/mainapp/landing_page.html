@@ -1,0 +1,17 @@
+{% extends 'mainapp/index.html' %}
+{% block title %}Landing page{% endblock %}
+{% block body %}
+
+{{request.user}} 
+
+    <div class="container" style="margin-top: 50px;">
+        
+            
+              {% csrf_token %}
+              <h2> LANDING PAGE </h2>
+              <a href="{% url 'register' %}" class="btn btn-primary" target="_blank">register</a>
+              <a href="{% url 'login_page' %}" class="btn btn-primary" target="_blank">login</a>
+ 
+    </div>
+
+{% endblock %}

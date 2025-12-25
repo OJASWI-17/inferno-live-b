@@ -1,0 +1,257 @@
+{% extends 'mainapp/index.html' %}
+{% load static %}
+
+{% block title %}Stock Trading{% endblock %}
+{% block body %}
+<div class="container">
+  <a href="{% url 'order_history' %}" class="btn btn-primary" target="_blank">View Order History</a>
+  <a href="{% url 'leaderboard' %}" class="btn btn-primary" target="_blank">Leaderboard</a>
+
+    <h1>Stock Trading</h1>
+    
+    <!-- Stock Selection -->
+    <div class="mb-3">
+        <select id="stock_selector" class="form-select">
+            {% for stock in available_stocks %}
+                <option value="{{ stock }}">{{ stock }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Quantity Input -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <label>Quantity:</label>
+            <input type="number" id="quantity" class="form-control" min="1" value="1">
+        </div>
+    </div>
+
+    <!-- Order Type Selection -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <label>Order Type:</label>
+            <select id="order_type" class="form-select">
+                <option value="market">Market Order</option>
+                <option value="limit">Limit Order</option>
+            </select>
+        </div>
+        <div class="col-md-3" id="price_input" style="display: none;">
+            <label>Price: $</label>
+            <input type="number" id="price" class="form-control" min="0.01" step="0.01">
+        </div>
+    </div>
+
+    <!-- Buy/Sell Buttons -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <button id="buy_button" class="btn btn-success">Buy</button>
+        </div>
+        <div class="col-md-3">
+            <button id="sell_button" class="btn btn-danger">Sell</button>
+        </div>
+    </div>
+
+    <!-- Balance -->
+    <div class="alert alert-info">
+        Balance: $<span id="user_balance">{{ balance }}</span>
+    </div>
+</div>
+
+<!-- Bought Stocks -->
+<div class="container mt-4">
+    <h3>Your Portfolio</h3>
+    <table class="table">
+      <thead>
+          <tr>
+              <th>Stock</th>
+              <th>Quantity</th>
+              <th>Average Price</th>
+              <th>Current Price</th>
+              <th>Total Value</th>
+              <th>Profit/Loss</th>
+          </tr>
+      </thead>
+      <tbody id="portfolio-table">
+          <!-- Rows will be populated dynamically using JavaScript -->
+      </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  // Function to fetch live prices and update the portfolio
+  function fetchLivePrices() {
+    fetch('/get_live_prices/') 
+        .then(response => response.json()) // .then() is used to process the promise returned by fetch()
+        .then(data => { // data is the JSON response from the server
+            const tableBody = document.getElementById('portfolio-table');
+            tableBody.innerHTML = '';  // Clear existing rows
+
+            for (const [stock, details] of Object.entries(data)) {
+                const row = document.createElement('tr');
+
+                // Stock
+                const stockCell = document.createElement('td');
+                stockCell.textContent = stock;
+                row.appendChild(stockCell);
+
+                // Quantity
+                const quantityCell = document.createElement('td');
+                quantityCell.textContent = details.quantity;
+                row.appendChild(quantityCell);
+
+                // Average Price
+                const avgPriceCell = document.createElement('td');
+                avgPriceCell.textContent = details.average_price.toFixed(2);
+                row.appendChild(avgPriceCell);
+
+                // Current Price
+                const currentPriceCell = document.createElement('td');
+                currentPriceCell.textContent = details.live_price;
+                row.appendChild(currentPriceCell);
+
+                // Total Value
+                const totalValueCell = document.createElement('td');
+                totalValueCell.textContent = details.total_value.toFixed(2);
+                row.appendChild(totalValueCell);
+
+                // Profit/Loss
+                const profitLossCell = document.createElement('td');
+                profitLossCell.textContent = `${details.profit_loss.toFixed(2)} (${details.profit_loss_percentage.toFixed(2)}%)`; // Display profit/loss and percentage
+                profitLossCell.style.color = details.profit_loss >= 0 ? 'green' : 'red';
+                row.appendChild(profitLossCell);
+
+                tableBody.appendChild(row);
+            }
+        })
+        .catch(error => console.error('Error fetching live prices:', error));
+}
+
+// Fetch live prices every 1 seconds
+setInterval(fetchLivePrices, 1000);
+fetchLivePrices();  // Initial fetch
+
+  // Show/hide price input based on order type
+  document.getElementById("order_type").addEventListener("change", function () {
+    const priceInput = document.getElementById("price_input");
+    if (this.value === "limit") {
+      priceInput.style.display = "block";
+    } else {
+      priceInput.style.display = "none";
+    }
+  });
+
+  // Buy button logic
+  document.getElementById("buy_button").addEventListener("click", function () {
+    const stockSymbol = document.getElementById("stock_selector").value; //.value is used to get the value of the selected option
+    const quantity = parseInt(document.getElementById("quantity").value);
+    const orderType = document.getElementById("order_type").value;
+    const price = orderType === "limit" ? parseFloat(document.getElementById("price").value) : null; // explain this line -> parseFloat is used to convert the string to a floating point number, null is used to set the price to null if the order type is not limit
+
+    if (!stockSymbol || !quantity) {
+      alert("Please select a stock and enter a quantity.");
+      return;
+    }
+
+    if (orderType === "limit" && !price) {
+      alert("Please enter a price for the limit order.");
+      return;
+    }
+
+    // Send AJAX request to place order
+    fetch("/place_order/", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded",
+    "X-CSRFToken": "{{ csrf_token }}", // 
+  },
+  body: new URLSearchParams({ // new URLSearchParams() is used to create a new URLSearchParams object , what is URLSearchParams  -> URLSearchParams is an interface defined in the URLSearchParams API that allows creation and manipulation of URL query parameters.
+    stock_symbol: stockSymbol,
+    quantity: quantity,
+    order_type: orderType,
+    price: price,
+    action: "buy",  // or "sell"
+  }),
+})
+  .then((response) => response.json())
+  .then((data) => {
+    console.log("Server Response:", data);  // Log the server response
+    if (data.error) {
+      alert(data.error);
+    } else {
+      if (data.message) {
+        // Limit order placed successfully
+        alert(data.message);
+      } else {
+        // Market order executed successfully
+        alert(`Successfully bought ${data.quantity} shares of ${data.stock} at $${data.price.toFixed(2)}!`);
+        // Update balance and portfolio
+        document.getElementById("user_balance").innerText = data.balance.toFixed(2);
+        fetchLivePrices();
+      }
+    }
+  })
+  .catch((error) => {
+    console.error("Error:", error);
+    alert("An error occurred while placing the order.");
+  });
+  });
+
+  // Sell button logic
+  document.getElementById("sell_button").addEventListener("click", function () {
+    const stockSymbol = document.getElementById("stock_selector").value;
+    const quantity = parseInt(document.getElementById("quantity").value);
+    const orderType = document.getElementById("order_type").value;
+    const price = orderType === "limit" ? parseFloat(document.getElementById("price").value) : null;
+
+    if (!stockSymbol || !quantity) {
+      alert("Please select a stock and enter a quantity.");
+      return;
+    }
+
+    if (orderType === "limit" && !price) {
+      alert("Please enter a price for the limit order.");
+      return;
+    }
+
+    // Send AJAX request to place order
+    fetch("/place_order/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: new URLSearchParams({
+        stock_symbol: stockSymbol,
+        quantity: quantity,
+        order_type: orderType,
+        price: price,
+        action: "sell",
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.error) {
+          alert(data.error);
+        } else {
+          if (data.message) {
+            // Limit order placed successfully
+            alert(data.message);
+          } else {
+            // Market order executed successfully
+            alert(`Successfully sold ${data.quantity} shares of ${data.stock} at $${data.price.toFixed(2)}!`);
+            // Update balance and portfolio
+            document.getElementById("user_balance").innerText = data.balance.toFixed(2);
+            fetchLivePrices();
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred while placing the order.");
+      });
+  });
+</script>
+{% endblock %}
+

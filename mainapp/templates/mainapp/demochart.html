@@ -1,0 +1,84 @@
+{% extends 'mainapp/index.html' %}
+{% load static %}
+
+{% block title %}Stock Trading{% endblock %}
+{% block body %}
+<div class="container">
+  
+<div class="container mt-4">
+    <h3>Your Portfolio</h3>
+    <table class="table">
+      <thead>
+          <tr>
+              <th>Stock</th>
+              <th>Quantity</th>
+              <th>Average Price</th>
+              <th>Current Price</th>
+              <th>Total Value</th>
+              <th>Profit/Loss</th>
+          </tr>
+      </thead>
+      <tbody id="portfolio-table">
+          <!-- Rows will be populated dynamically using JavaScript -->
+      </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  // Function to fetch live prices and update the portfolio
+  function fetchLivePrices() {
+    fetch('/get_live_prices/') 
+        .then(response => response.json()) // .then() is used to process the promise returned by fetch()
+        .then(data => { // data is the JSON response from the server
+            const tableBody = document.getElementById('portfolio-table');
+            tableBody.innerHTML = '';  // Clear existing rows
+
+            for (const [stock, details] of Object.entries(data)) {
+                const row = document.createElement('tr');
+
+                // Stock
+                const stockCell = document.createElement('td');
+                stockCell.textContent = stock;
+                row.appendChild(stockCell);
+
+                // Quantity
+                const quantityCell = document.createElement('td');
+                quantityCell.textContent = details.quantity;
+                row.appendChild(quantityCell);
+
+                // Average Price
+                const avgPriceCell = document.createElement('td');
+                avgPriceCell.textContent = details.average_price.toFixed(2);
+                row.appendChild(avgPriceCell);
+
+                // Current Price
+                const currentPriceCell = document.createElement('td');
+                currentPriceCell.textContent = details.live_price;
+                row.appendChild(currentPriceCell);
+
+                // Total Value
+                const totalValueCell = document.createElement('td');
+                totalValueCell.textContent = details.total_value.toFixed(2);
+                row.appendChild(totalValueCell);
+
+                // Profit/Loss
+                const profitLossCell = document.createElement('td');
+                profitLossCell.textContent = `${details.profit_loss.toFixed(2)} (${details.profit_loss_percentage.toFixed(2)}%)`; // Display profit/loss and percentage
+                profitLossCell.style.color = details.profit_loss >= 0 ? 'green' : 'red';
+                row.appendChild(profitLossCell);
+
+                tableBody.appendChild(row);
+            }
+        })
+        .catch(error => console.error('Error fetching live prices:', error));
+}
+
+// Fetch live prices every 1 seconds
+setInterval(fetchLivePrices, 1000);
+fetchLivePrices();  // Initial fetch
+
+</script>
+{% endblock %}
+
