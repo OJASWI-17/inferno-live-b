@@ -140,6 +140,7 @@ DATABASES = {
         ssl_require=True,
     )
 }
+print("DATABASE_URL =", os.environ.get("DATABASE_URL"))
 
 
 # Password validation
