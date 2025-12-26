@@ -6,9 +6,13 @@ import websockets
 from lightweight_charts import Chart
 import tkinter as tk
 from tkinter import ttk
+import os
 
 # Connect to Redis
-redis_conn = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+redis_conn =redis.from_url(
+    os.environ.get("REDIS_URL"),
+    decode_responses=True
+)
 
 # WebSocket URL template
 # WS_URL_TEMPLATE = "ws://localhost:8000/ws/stock/{room_name}/"

@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 import redis
 from django.db.models.signals import post_migrate
+import os
 
 def reset_orders_and_balance():
     """Clear the UserStock and LimitOrder tables and reset UserProfile balance."""
@@ -32,7 +33,10 @@ class MainappConfig(AppConfig):
         """Flush Redis and reset orders and balance after the app is ready."""
         try:
             # Flush Redis
-            redis_client = redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
+            redis_client = redis.from_url(
+    os.environ.get("REDIS_URL"),
+    decode_responses=True
+)
             redis_client.flushdb()
             print("Redis database cleared on startup!")
         except Exception as e:

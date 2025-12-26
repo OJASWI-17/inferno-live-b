@@ -3,10 +3,13 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 import redis
 from urllib.parse import parse_qs
+import os
 
 # Connect to Redis
-redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
-
+redis_client =redis.from_url(
+    os.environ.get("REDIS_URL"),
+    decode_responses=True
+)
 class StockConsumer(AsyncWebsocketConsumer):
     """Manages stock selection and periodic updates using Celery Beat."""
 
