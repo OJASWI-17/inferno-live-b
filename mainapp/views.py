@@ -28,7 +28,7 @@ from django.conf import settings
 from django.utils.timezone import now, timedelta
 # csrf_exempt is used to exempt the view from CSRF verification means that the view will not check for CSRF token in the request
 
-
+import os
 
 
 
@@ -179,7 +179,12 @@ def logout_page(request):
     return JsonResponse({'error': 'Method not allowed'}, status=405) 
 
 # Path to CSV file
-CSV_FILE_PATH = "mainapp/multi_stock_data.csv"
+CSV_FILE_PATH = os.path.join(
+    settings.BASE_DIR,
+    "mainapp",
+    "multi_stock_data.csv"
+)
+
 
 # Load CSV into a DataFrame
 df = pd.read_csv(CSV_FILE_PATH)
@@ -277,7 +282,12 @@ async def stockTracker(request):
 
 
 
-redis_conn = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+
+
+redis_conn = redis.from_url(
+    os.environ.get("REDIS_URL"),
+    decode_responses=True
+)
 
 def stock_chart_data(request, stock_symbol):
     """Fetch stock data from Redis and return it in JSON format."""

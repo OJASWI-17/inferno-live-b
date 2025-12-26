@@ -7,13 +7,23 @@ import asyncio
 from mainapp.models import StockDetail,LimitOrder
 from decimal import Decimal
 from .order_utils import buy_stock, sell_stock 
-
+import os
+from django.conf import settings
 
 # Redis Connection
-redis_conn = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
+
+redis_conn = redis.from_url(
+    os.environ.get("REDIS_URL"),
+    decode_responses=True
+)
+
+CSV_FILE_PATH = os.path.join(
+    settings.BASE_DIR,
+    "mainapp",
+    "multi_stock_data.csv"
+)
 # Path to CSV file
-CSV_FILE_PATH ="mainapp/multi_stock_data.csv"
 df = pd.read_csv(CSV_FILE_PATH)
 
 # Track index for each stock
