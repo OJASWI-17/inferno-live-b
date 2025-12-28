@@ -27,6 +27,7 @@ import jwt
 from django.conf import settings
 from django.utils.timezone import now, timedelta
 # csrf_exempt is used to exempt the view from CSRF verification means that the view will not check for CSRF token in the request
+from threading import Thread
 
 import os
 
@@ -77,6 +78,13 @@ import random
 from django.core.cache import cache
 from django.core.mail import send_mail
 
+def send_otp_email(subject, message, from_email, recipient_list):
+    try:
+        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+    except Exception as e:
+        print("Email error:", e)
+
+
 @csrf_exempt
 def login_page(request):
     if request.method == "POST":
@@ -92,13 +100,10 @@ def login_page(request):
             otp = random.randint(100000, 999999)
             cache.set(f'otp_{user.username}', otp, timeout=300)
             
-            send_mail(
-                'Your OTP Code',  # Subject
-                f'Your OTP code is {otp}',  # Message
-                settings.EMAIL_HOST_USER,  # From (using settings)
-                [user.email],  # To
-                fail_silently=False
-            )
+            Thread(target=send_otp_email,args=('Your OTP Code',f'Your OTP code is {otp}',settings.EMAIL_HOST_USER,[user.email],),daemon=True).start()
+
+            
+            
             return JsonResponse({'message': 'OTP sent successfully'})
             
         except Exception as e:
