@@ -237,7 +237,7 @@ EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool, default=False)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
-
+REDIS_URL = os.getenv("REDIS_URL")
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -249,7 +249,7 @@ CACHES = {
 }
 
 
-REDIS_URL = os.getenv("REDIS_URL")
+
 
 # Celery
 CELERY_BROKER_URL = REDIS_URL
