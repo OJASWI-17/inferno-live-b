@@ -229,15 +229,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 from decouple import config
 
 # Email settings
-EMAIL_BACKEND = config('EMAIL_BACKEND')
-EMAIL_HOST = config('EMAIL_HOST')
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS") == "True"
-EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL") == "True"
+# EMAIL_BACKEND = config('EMAIL_BACKEND')
+# EMAIL_HOST = config('EMAIL_HOST')
+# EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+# EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS") == "True"
+# EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL") == "True"
 
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+# DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
+print("SENDGRID_API_KEY exists:", bool(SENDGRID_API_KEY))
+print("DEFAULT_FROM_EMAIL:", DEFAULT_FROM_EMAIL)
+
 REDIS_URL = os.getenv("REDIS_URL")
 CACHES = {
     "default": {
@@ -275,11 +280,3 @@ CHANNEL_LAYERS = {
 }
 
 
-
-print("EMAIL_BACKEND =", EMAIL_BACKEND)
-print("EMAIL_HOST =", EMAIL_HOST)
-print("EMAIL_PORT =", EMAIL_PORT)
-print("EMAIL_USE_SSL =", EMAIL_USE_SSL)
-print("EMAIL_HOST_USER =", EMAIL_HOST_USER)
-print("DEFAULT_FROM_EMAIL =", DEFAULT_FROM_EMAIL)
-print("REDIS_URL =", REDIS_URL)

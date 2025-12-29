@@ -31,6 +31,8 @@ from threading import Thread
 
 import os
 
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 
 def generate_jwt_token(user):
@@ -78,14 +80,19 @@ import random
 from django.core.cache import cache
 from django.core.mail import send_mail
 
-def send_otp_email_sync(subject, message, recipient_list):
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        recipient_list,
-        fail_silently=False,
+def send_otp_email_sync(subject, message, recipient_email):
+    email = Mail(
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to_emails=recipient_email,
+        subject=subject,
+        plain_text_content=message,
     )
+
+    sg = SendGridAPIClient(api_key=os.environ.get("SENDGRID_API_KEY"))
+    response = sg.send(email)
+
+    print("SendGrid status:", response.status_code)
+
 
 
 
@@ -104,7 +111,8 @@ def login_page(request):
             otp = random.randint(100000, 999999)
             cache.set(f'otp_{user.username}', otp, timeout=300)
             
-            sync_to_async(send_otp_email_sync, thread_sensitive=False)('Your OTP Code',f'Your OTP code is {otp}',[user.email],)
+            sync_to_async(send_otp_email_sync, thread_sensitive=False)('Your OTP Code',f'Your OTP code is {otp}',user.email,)
+
 
 
 

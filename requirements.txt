@@ -61,3 +61,4 @@ python-decouple==3.8
 django-cors-headers==4.7.0
 whitenoise==6.7.0
 django-redis
+sendgrid
