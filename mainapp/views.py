@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404 ,redirect
 from django.http import HttpResponse, JsonResponse
 import pandas as pd
 from .tasks import update_stock
-from asgiref.sync import sync_to_async
 import redis
 import json
 from django.contrib.auth.decorators import login_required
@@ -27,7 +26,6 @@ import jwt
 from django.conf import settings
 from django.utils.timezone import now, timedelta
 # csrf_exempt is used to exempt the view from CSRF verification means that the view will not check for CSRF token in the request
-from threading import Thread
 
 import os
 
@@ -79,7 +77,6 @@ def verifyotp(request):
 
 import random
 from django.core.cache import cache
-from django.core.mail import send_mail
 
 
 
