@@ -78,11 +78,15 @@ import random
 from django.core.cache import cache
 from django.core.mail import send_mail
 
-def send_otp_email(subject, message, from_email, recipient_list):
-    try:
-        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
-    except Exception as e:
-        print("Email error:", e)
+def send_otp_email_sync(subject, message, recipient_list):
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        recipient_list,
+        fail_silently=False,
+    )
+
 
 
 @csrf_exempt
@@ -100,7 +104,8 @@ def login_page(request):
             otp = random.randint(100000, 999999)
             cache.set(f'otp_{user.username}', otp, timeout=300)
             
-            send_otp_email('Your OTP Code',f'Your OTP code is {otp}',settings.DEFAULT_FROM_EMAIL,[user.email],)
+            sync_to_async(send_otp_email_sync, thread_sensitive=False)('Your OTP Code',f'Your OTP code is {otp}',[user.email],)
+
 
 
             
