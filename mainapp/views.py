@@ -100,7 +100,8 @@ def login_page(request):
             otp = random.randint(100000, 999999)
             cache.set(f'otp_{user.username}', otp, timeout=300)
             
-            Thread(target=send_otp_email,args=('Your OTP Code',f'Your OTP code is {otp}',settings.DEFAULT_FROM_EMAIL,[user.email],),daemon=True).start()
+            send_otp_email('Your OTP Code',f'Your OTP code is {otp}',settings.DEFAULT_FROM_EMAIL,[user.email],)
+
 
             
             
