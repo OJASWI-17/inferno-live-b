@@ -33,6 +33,7 @@ import os
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+from asgiref.sync import async_to_sync
 
 
 def generate_jwt_token(user):
@@ -124,8 +125,11 @@ def login_page(request):
 
             otp = random.randint(100000, 999999)
             cache.set(f'otp_{user.username}', otp, timeout=300)
+            print("OTP generated:", otp)
+            print("Sending OTP to:", user.email)
+
             
-            sync_to_async(send_otp_email_sync, thread_sensitive=False)('Your OTP Code',f'Your OTP code is {otp}',user.email,)
+            async_to_sync(send_otp_email_sync)('Your OTP Code',f'Your OTP code is {otp}',user.email,)
 
 
 
