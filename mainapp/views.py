@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404 ,redirect
 from django.http import HttpResponse, JsonResponse
 import pandas as pd
 from .tasks import update_stock
-# from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async
 import redis
 import json
 from django.db.models import Sum  # Import Sum for aggregation
@@ -30,7 +30,6 @@ import os
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from asgiref.sync import async_to_sync
 
 
 def generate_jwt_token(user):
@@ -108,8 +107,9 @@ def send_otp_email_sync(subject, message, recipient_email):
 
 
 
+
 @csrf_exempt
-def login_page(request):
+async def login_page(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -122,23 +122,22 @@ def login_page(request):
 
             otp = random.randint(100000, 999999)
             cache.set(f'otp_{user.username}', otp, timeout=300)
+
             print("OTP generated:", otp)
             print("Sending OTP to:", user.email)
 
-            
-            async_to_sync(send_otp_email_sync)('Your OTP Code',f'Your OTP code is {otp}',user.email,)
+            await sync_to_async(send_otp_email_sync)(
+                'Your OTP Code',
+                f'Your OTP code is {otp}',
+                user.email,
+            )
 
-
-
-
-            
-            
             return JsonResponse({'message': 'OTP sent successfully'})
-            
+
         except Exception as e:
-            print(f"Error: {str(e)}")  # Debugging
+            print("Error:", e)
             return JsonResponse({'error': str(e)}, status=500)
-    
+
 
 def jwt_required(view_func):
     def wrapper(request, *args, **kwargs):
