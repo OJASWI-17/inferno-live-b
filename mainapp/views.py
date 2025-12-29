@@ -2,13 +2,12 @@ from django.shortcuts import render, get_object_or_404 ,redirect
 from django.http import HttpResponse, JsonResponse
 import pandas as pd
 from .tasks import update_stock
+# from asgiref.sync import sync_to_async
 import redis
 import json
-from django.contrib.auth.decorators import login_required
 from django.db.models import Sum  # Import Sum for aggregation
 from .models import UserProfile, StockDetail ,UserStock,LimitOrder,Transaction# Import your models
 from django.views.decorators.http import require_POST
-from decimal import Decimal
 
 from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
@@ -77,6 +76,7 @@ def verifyotp(request):
 
 import random
 from django.core.cache import cache
+from django.core.mail import send_mail
 
 
 
@@ -283,28 +283,19 @@ def stockPicker(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-@sync_to_async
-def checkAuthenticated(request):
-    return bool(request.user.is_authenticated)
+from asgiref.sync import sync_to_async
+
+async def checkAuthenticated(request):
+    return await sync_to_async(
+        lambda: bool(request.user.is_authenticated)
+    )()
+
 
 from django.http import JsonResponse
 
 
 async def stockTracker(request):
-    # Get token from the "Authorization" header
-    # auth_header = request.headers.get('Authorization')
-    # if not auth_header:
-    #     return JsonResponse({'error': 'Authorization header missing'}, status=401)
-
-    # try:
-    #     token = auth_header.split(' ')[1]
-    #     payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-    #     user = await sync_to_async(User.objects.get)(id=payload['user_id'])
-    # except Exception as e:
-    #     print("JWT error:", e)
-    #     return JsonResponse({'error': 'Invalid or expired token'}, status=401)
-
-    # ✅ Now you have `user`, continue
+    
     selected_stocks = request.GET.getlist("stock_picker")
     if not selected_stocks:
         return JsonResponse({"error": "No stocks selected"}, status=400)
