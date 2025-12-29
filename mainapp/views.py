@@ -116,16 +116,29 @@ async def login_page(request):
             username = data.get('username')
             password = data.get('password')
 
-            user = authenticate(username=username, password=password)
+            # ✅ wrap authenticate
+            user = await sync_to_async(authenticate)(
+                username=username,
+                password=password
+            )
+
             if not user:
                 return JsonResponse({'error': 'Invalid credentials'}, status=400)
 
+            # ✅ generate OTP (pure python, safe)
             otp = random.randint(100000, 999999)
-            cache.set(f'otp_{user.username}', otp, timeout=300)
+
+            # ✅ wrap cache.set
+            await sync_to_async(cache.set)(
+                f'otp_{user.username}',
+                otp,
+                300
+            )
 
             print("OTP generated:", otp)
             print("Sending OTP to:", user.email)
 
+            # ✅ wrap SendGrid call
             await sync_to_async(send_otp_email_sync)(
                 'Your OTP Code',
                 f'Your OTP code is {otp}',
