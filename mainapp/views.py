@@ -80,18 +80,32 @@ import random
 from django.core.cache import cache
 from django.core.mail import send_mail
 
+
+
 def send_otp_email_sync(subject, message, recipient_email):
-    email = Mail(
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to_emails=recipient_email,
-        subject=subject,
-        plain_text_content=message,
-    )
+    print("🚀 Attempting to send OTP email")
+    print("➡️ To:", recipient_email)
+    print("➡️ From:", settings.DEFAULT_FROM_EMAIL)
 
-    sg = SendGridAPIClient(api_key=os.environ.get("SENDGRID_API_KEY"))
-    response = sg.send(email)
+    try:
+        sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
 
-    print("SendGrid status:", response.status_code)
+        email = Mail(
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to_emails=recipient_email,
+            subject=subject,
+            plain_text_content=message,
+        )
+
+        response = sg.send(email)
+
+        print("✅ SendGrid status:", response.status_code)
+        print("✅ SendGrid body:", response.body)
+        print("✅ SendGrid headers:", response.headers)
+
+    except Exception as e:
+        print("❌ SendGrid ERROR:", str(e))
+
 
 
 
